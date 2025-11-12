@@ -1,0 +1,442 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Report Template Maker</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- UPDATED: Load Plus Jakarta Sans Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom styles for the canvas container and button aesthetics */
+        body {
+            /* UPDATED: Changed font family to Plus Jakarta Sans */
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f7f9fb;
+        }
+        #canvas {
+            border: 2px solid #e2e8f0;
+            border-radius: 0.75rem; /* rounded-xl */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            background-color: #ffffff;
+            /* Ensure the canvas is display: block for better layout control */
+            display: block;
+            margin: 0 auto;
+            /* ** NEW 9:16 DISPLAY SIZE ** */
+            width: 450px; 
+            height: 800px;
+            max-width: 100%;
+        }
+        /* Style the canvas container on mobile */
+        @media (max-width: 640px) {
+            #canvas {
+                /* Use 100% width on mobile, height auto maintains 9:16 aspect ratio */
+                width: 100%;
+                height: auto;
+            }
+        }
+        /* Style for the range slider */
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #4F46E5; /* Indigo-600 */
+            cursor: pointer;
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.2);
+            transition: background 0.15s ease-in-out;
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-8">
+
+    <div class="max-w-4xl mx-auto">
+        <header class="text-center mb-10">
+            <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-2">Live Report Template Maker</h1>
+            <p class="text-gray-600">Select a photo and a template, then add your report details.</p>
+        </header>
+
+        <main class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Left Panel: Controls and Inputs -->
+            <div class="lg:col-span-1 space-y-6">
+                <!-- User Photo Input -->
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+                    <label for="userPhotoInput" class="block text-lg font-semibold text-gray-700 mb-2">1. Upload Your Photo (Live Report)</label>
+                    <input type="file" id="userPhotoInput" accept="image/*" class="w-full text-sm text-gray-500
+                        file:mr-4 file:py-2 file:px-4
+                        file:rounded-full file:border-0
+                        file:text-sm file:font-semibold
+                        file:bg-indigo-50 file:text-indigo-600
+                        hover:file:bg-indigo-100
+                    ">
+                    <p id="photoStatus" class="mt-2 text-sm text-gray-500"></p>
+                </div>
+
+                <!-- Vertical Offset/Crop Control (NEW) -->
+                <div id="cropControls" class="bg-white p-6 rounded-xl shadow-lg border border-gray-100 hidden">
+                    <label for="verticalOffsetSlider" class="block text-lg font-semibold text-gray-700 mb-2">Adjust Photo Crop Position</label>
+                    <input type="range" id="verticalOffsetSlider" min="0" max="100" value="50" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer range-lg">
+                    <div class="flex justify-between text-sm text-gray-500 mt-2">
+                        <span>Top</span>
+                        <span>Bottom</span>
+                    </div>
+                </div>
+
+                <!-- Template Selection (New) -->
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+                    <label for="templateSelect" class="block text-lg font-semibold text-gray-700 mb-2">2. Select Report Template</label>
+                    <select id="templateSelect" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="">-- Choose a template --</option>
+                        <option value="template1">Template 1: Live Report (Red)</option>
+                        <option value="template2">Template 2: Breaking News (Yellow)</option>
+                        <option value="template3">Template 3: Urgent Update (Blue)</option>
+                        <option value="template4">Template 4: Community (Green)</option>
+                    </select>
+                </div>
+
+                <!-- Custom Text/Caption Input (New) -->
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+                    <label for="customTextInput" class="block text-lg font-semibold text-gray-700 mb-2">3. Add Custom Text/Caption</label>
+                    <input type="text" id="customTextInput" placeholder="E.g., Flooding in West Jakarta" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+
+                <!-- Category/Date Input (New) -->
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+                    <label for="categoryInput" class="block text-lg font-semibold text-gray-700 mb-2">4. Add Date or Category</label>
+                    <input type="text" id="categoryInput" placeholder="E.g., 12 Nov 2025" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+
+                <!-- Action Button -->
+                <div class="pt-4 space-y-4">
+                    <button id="applyButton" disabled class="w-full px-6 py-3 text-white font-bold rounded-full bg-indigo-500 hover:bg-indigo-600 transition duration-150 ease-in-out shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
+                        Apply Template
+                    </button>
+                    
+                    <button id="downloadButton" disabled class="w-full px-6 py-3 text-white font-bold rounded-full bg-teal-500 hover:bg-teal-600 transition duration-150 ease-in-out shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
+                        Download Final Image
+                    </button>
+                    
+                    <div id="messageBox" class="p-3 bg-red-100 text-red-700 rounded-lg hidden" role="alert"></div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Canvas Preview -->
+            <div class="lg:col-span-2 flex justify-center items-center p-4 bg-white rounded-xl shadow-lg border border-gray-100 min-h-[400px]">
+                <!-- Fixed 450x800 canvas for 9:16 aspect ratio -->
+                <canvas id="canvas" width="450" height="800"></canvas>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        // --- Core Application Setup ---
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const userPhotoInput = document.getElementById('userPhotoInput');
+        const templateSelect = document.getElementById('templateSelect');
+        const customTextInput = document.getElementById('customTextInput');
+        const categoryInput = document.getElementById('categoryInput');
+        const applyButton = document.getElementById('applyButton');
+        const downloadButton = document.getElementById('downloadButton');
+        const messageBox = document.getElementById('messageBox');
+        
+        // NEW elements
+        const cropControls = document.getElementById('cropControls');
+        const verticalOffsetSlider = document.getElementById('verticalOffsetSlider');
+        
+        let userPhoto = new Image();
+        let userPhotoLoaded = false;
+
+        // ** 9:16 RESOLUTION CONSTANTS **
+        const CANVAS_W = 450;
+        const CANVAS_H = 800;
+        canvas.width = CANVAS_W;
+        canvas.height = CANVAS_H;
+        
+        // Initial canvas setup
+        function initializeCanvas() {
+            ctx.fillStyle = '#E5E7EB'; // Light gray background placeholder
+            ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#6B7280';
+            // Font for canvas placeholder text
+            ctx.font = '18px Plus Jakarta Sans'; 
+            ctx.fillText('Upload photo and select a template to begin', CANVAS_W / 2, CANVAS_H / 2);
+        }
+        initializeCanvas();
+
+        // --- Utility Functions ---
+
+        /** Shows a temporary message in the message box. */
+        function showMessage(message, type = 'error') {
+            messageBox.textContent = message;
+            messageBox.classList.remove('hidden', 'bg-red-100', 'bg-green-100', 'text-red-700', 'text-green-700');
+            if (type === 'error') {
+                messageBox.classList.add('bg-red-100', 'text-red-700');
+            } else {
+                messageBox.classList.add('bg-green-100', 'text-green-700');
+            }
+            setTimeout(() => {
+                messageBox.classList.add('hidden');
+            }, 5000);
+        }
+
+        /** Checks if photo is loaded and template is selected and enables the Apply button. */
+        function updateApplyButtonState() {
+            const templateSelected = templateSelect.value !== '';
+            applyButton.disabled = !(userPhotoLoaded && templateSelected);
+            if (userPhotoLoaded && templateSelected) {
+                applyButton.textContent = 'Apply Template & Text';
+            } else {
+                applyButton.textContent = 'Upload Photo & Select Template';
+            }
+        }
+
+        /** Reads a file input and loads it into a JavaScript Image object (User Photo only). */
+        function handleUserPhotoUpload(event) {
+            const file = event.target.files[0];
+            const statusElement = document.getElementById('photoStatus');
+            
+            if (file) {
+                statusElement.textContent = `File loaded: ${file.name}`;
+                statusElement.classList.remove('text-red-500');
+                statusElement.classList.add('text-green-500');
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    userPhoto.onload = () => {
+                        userPhotoLoaded = true;
+                        updateApplyButtonState();
+                        
+                        // NEW: Check image ratio to decide if vertical crop control is needed
+                        const imageRatio = userPhoto.width / userPhoto.height;
+                        const canvasRatio = CANVAS_W / CANVAS_H;
+                        
+                        // If the image is wider than the canvas (imageRatio > canvasRatio), 
+                        // it will overflow vertically when scaled to cover the width. We need a slider.
+                        if (imageRatio > canvasRatio) { 
+                             cropControls.classList.remove('hidden');
+                             verticalOffsetSlider.value = 50; // Reset slider to center
+                        } else {
+                             // Image is already vertical or perfect ratio, no vertical adjustment needed.
+                             cropControls.classList.add('hidden');
+                             verticalOffsetSlider.value = 50; 
+                        }
+
+                        // Always apply template/display photo immediately after loading
+                        applyTemplate();
+                    };
+                    userPhoto.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // --- Image Merging & Drawing Logic ---
+
+        /** Draws the background photo to cover the entire canvas area (9:16), applying the vertical offset. */
+        function drawUserPhotoToCover() {
+            const canvasW = CANVAS_W;
+            const canvasH = CANVAS_H;
+            const imgW = userPhoto.width;
+            const imgH = userPhoto.height;
+
+            // Get vertical offset percentage from the slider (0 to 100)
+            // 0 = Top alignment; 100 = Bottom alignment
+            const vOffsetPercentage = parseFloat(verticalOffsetSlider.value) / 100;
+
+            // Calculate the ratio needed to cover the canvas entirely
+            const ratio = Math.max(canvasW / imgW, canvasH / imgH);
+            
+            const newW = imgW * ratio;
+            const newH = imgH * ratio;
+
+            // 1. Always center horizontally
+            let x = (canvasW - newW) / 2;
+
+            // 2. Adjust vertical position only if the scaled image is taller than the canvas (vertical overflow)
+            let y = (canvasH - newH) / 2; // Default to center
+
+            if (newH > canvasH) {
+                // If there is vertical overflow, we use the slider to set the Y position.
+                // The range of Y positions is from (canvasH - newH) (bottom) to 0 (top).
+                const minY = canvasH - newH;
+                const maxY = 0;
+                
+                // If slider is 0 (Top), y should be 0 (maxY).
+                // If slider is 100 (Bottom), y should be canvasH - newH (minY).
+                // We use (1 - vOffsetPercentage) to invert the slider for an intuitive control.
+                const invertedVOffsetPercentage = 1 - vOffsetPercentage;
+                y = minY + (maxY - minY) * invertedVOffsetPercentage;
+            }
+            
+            // Draw the user photo centered and scaled to cover
+            ctx.drawImage(userPhoto, x, y, newW, newH);
+        }
+
+        /** Dynamically draws the selected template frame and text fields. */
+        function drawTemplateOverlay(templateId, customText, categoryText) {
+            const W = CANVAS_W; // 450
+            const H = CANVAS_H; // 800
+            const PADDING = 20;
+
+            // 1. Template Definitions (Colors, positions, etc.)
+            const templates = {
+                template1: { // Live Report (Red) - Bottom Banner
+                    bannerColor: 'rgba(220, 38, 38, 0.9)', // Red-700
+                    bannerHeight: H * 0.1, // 10% of the new height (80px)
+                    text: { y: H - (H * 0.1 / 2) + 15, align: 'left', size: '36px', color: 'white' }, 
+                    category: { y: H - (H * 0.1) + 25, align: 'left', size: '20px', color: 'white' } 
+                },
+                template2: { // Breaking News (Yellow) - Top Banner
+                    bannerColor: 'rgba(251, 191, 36, 0.9)', // Yellow-400
+                    bannerHeight: H * 0.08, // 8% of the new height (64px)
+                    text: { y: H * 0.08 / 2 + 15, align: 'center', size: '36px', color: 'black' }, 
+                    category: { y: H * 0.08 + 25, align: 'center', size: '20px', color: 'black' } 
+                },
+                template3: { // Urgent Update (Blue) - Thin Frame
+                    frameColor: 'rgba(59, 130, 246, 0.9)', // Blue-500
+                    frameWidth: 10,
+                    text: { y: H / 2, align: 'center', size: '48px', color: 'white' }, 
+                    category: { y: H / 2 + 60, align: 'center', size: '28px', color: 'white' } 
+                },
+                template4: { // Community (Green) - Bottom-Left Callout
+                    calloutColor: 'rgba(16, 185, 129, 0.9)', // Green-500
+                    calloutSize: W * 0.7, // Based on width (315px)
+                    text: { y: H - 40, align: 'left', size: '32px', color: 'white' }, 
+                    category: { y: H - 85, align: 'left', size: '22px', color: 'white' } 
+                }
+            };
+
+            const template = templates[templateId];
+
+            if (!template) return;
+
+            // --- Draw Template Frame/Banner (Overlay) ---
+            if (template.bannerColor) {
+                // Draw a colored banner (Template 1 & 2)
+                ctx.fillStyle = template.bannerColor;
+                if (templateId === 'template1') {
+                    // Bottom Banner
+                    ctx.fillRect(0, H - template.bannerHeight, W, template.bannerHeight);
+                } else if (templateId === 'template2') {
+                    // Top Banner
+                    ctx.fillRect(0, 0, W, template.bannerHeight);
+                }
+            } else if (template.frameColor) {
+                // Draw a thin frame border (Template 3)
+                ctx.strokeStyle = template.frameColor;
+                ctx.lineWidth = template.frameWidth;
+                ctx.strokeRect(template.frameWidth / 2, template.frameWidth / 2, W - template.frameWidth, H - template.frameWidth);
+
+            } else if (templateId === 'template4') {
+                // Draw a simple corner callout (Template 4)
+                ctx.fillStyle = template.calloutColor;
+                ctx.beginPath();
+                ctx.moveTo(0, H);
+                ctx.lineTo(template.calloutSize, H);
+                ctx.lineTo(0, H - template.calloutSize);
+                ctx.closePath();
+                ctx.fill();
+            }
+
+            // --- Draw Text ---
+
+            // Draw Category Text (Smaller font, above or near main text)
+            ctx.textAlign = template.category.align;
+            ctx.fillStyle = template.category.color;
+            // Font for canvas category text
+            ctx.font = `${template.category.size} Plus Jakarta Sans`; 
+            
+            let catX = 0;
+            if (template.category.align === 'center') catX = W / 2;
+            if (template.category.align === 'left') catX = PADDING;
+            if (template.category.align === 'right') catX = W - PADDING;
+            
+            ctx.fillText(categoryText.toUpperCase(), catX, template.category.y);
+
+            // Draw Custom Text (Main font, centered or aligned based on template)
+            ctx.textAlign = template.text.align;
+            ctx.fillStyle = template.text.color;
+            // Font for canvas main text
+            ctx.font = `bold ${template.text.size} Plus Jakarta Sans`;
+            
+            let textX = 0;
+            if (template.text.align === 'center') textX = W / 2;
+            if (template.text.align === 'left') textX = PADDING;
+            if (template.text.align === 'right') textX = W - PADDING;
+
+            ctx.fillText(customText, textX, template.text.y);
+        }
+
+
+        /** Main function to merge and display images */
+        function applyTemplate() {
+            const selectedTemplate = templateSelect.value;
+            const customText = customTextInput.value || 'Add your custom text here...';
+            const categoryText = categoryInput.value || 'Category/Date';
+
+            if (!userPhotoLoaded) {
+                showMessage('Please upload a photo first.');
+                return;
+            }
+
+            // 1. Clear the canvas
+            ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+            initializeCanvas(); // Redraws placeholder text if needed
+
+            // 2. Draw the user photo (background layer) - Scaled to cover with offset
+            drawUserPhotoToCover();
+
+            if (selectedTemplate !== '') {
+                // 3. Draw the dynamic template and text (foreground layer)
+                drawTemplateOverlay(selectedTemplate, customText, categoryText);
+                downloadButton.disabled = false;
+                showMessage('Template applied successfully! You can now download the image.', 'success');
+            } else {
+                downloadButton.disabled = true;
+                // If only photo is drawn, just show a hint
+                showMessage('Photo loaded. Select a template and click "Apply Template".', 'success');
+            }
+        }
+
+        // --- Download Logic ---
+
+        function downloadImage() {
+            if (downloadButton.disabled) {
+                showMessage('Please apply the template first.');
+                return;
+            }
+
+            // Use canvas.toDataURL to get the image data as a PNG
+            const dataURL = canvas.toDataURL('image/png');
+            
+            // Create a temporary link element to trigger the download
+            const link = document.createElement('a');
+            link.href = dataURL;
+            link.download = `live-report-${Date.now()}.png`; // Unique filename
+            
+            // Append to body, click it, and remove it immediately
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // --- Event Listeners ---
+        userPhotoInput.addEventListener('change', handleUserPhotoUpload);
+        templateSelect.addEventListener('change', updateApplyButtonState); // Only update button on selection
+        applyButton.addEventListener('click', applyTemplate);
+        downloadButton.addEventListener('click', downloadImage);
+
+        // Re-apply template automatically when text fields or slider change, if the photo is ready.
+        customTextInput.addEventListener('input', applyTemplate);
+        categoryInput.addEventListener('input', applyTemplate);
+        templateSelect.addEventListener('change', applyTemplate);
+        verticalOffsetSlider.addEventListener('input', applyTemplate);
+
+    </script>
+</body>
+</html>
